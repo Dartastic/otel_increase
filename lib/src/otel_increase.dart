@@ -2,7 +2,6 @@
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
 import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
-import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_increase_suppression.dart';
 
@@ -54,54 +53,69 @@ Future<T> tracedIncrease<T>({
   final t = tracer ?? OTel.tracerProvider().getTracer('otel_increase');
   final span = t.startSpan('increase $operation', kind: SpanKind.client);
   try {
-    span.setStringAttribute('rpc.system', 'increase');
+    span.addAttributes(
+        OTel.attributes([OTel.attributeString('rpc.system', 'increase')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.groupId != null) {
-        span.setStringAttribute('increase.group.id', res.groupId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.group.id', res.groupId!)]));
       }
       if (res.entityId != null) {
-        span.setStringAttribute('increase.entity.id', res.entityId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.entity.id', res.entityId!)]));
       }
       if (res.accountId != null) {
-        span.setStringAttribute('increase.account.id', res.accountId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.account.id', res.accountId!)]));
       }
       if (res.accountNumberId != null) {
-        span.setStringAttribute(
-          'increase.account_number.id',
-          res.accountNumberId!,
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            'increase.account_number.id',
+            res.accountNumberId!,
+          )
+        ]));
       }
       if (res.transferId != null) {
-        span.setStringAttribute('increase.transfer.id', res.transferId!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.transfer.id', res.transferId!)]));
       }
       if (res.transferType != null) {
-        span.setStringAttribute('increase.transfer.type', res.transferType!);
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString('increase.transfer.type', res.transferType!)
+        ]));
       }
       if (res.amount != null) {
-        span.setDoubleAttribute('increase.amount', res.amount!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeDouble('increase.amount', res.amount!)]));
       }
       if (res.currency != null) {
-        span.setStringAttribute('increase.currency', res.currency!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.currency', res.currency!)]));
       }
       if (res.status != null) {
-        span.setStringAttribute('increase.status', res.status!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.status', res.status!)]));
       }
       if (res.statusCode != null) {
-        span.setIntAttribute('http.response.status_code', res.statusCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
       }
       if (res.errorCode != null) {
-        span.setStringAttribute('increase.error.code', res.errorCode!);
+        span.addAttributes(OTel.attributes(
+            [OTel.attributeString('increase.error.code', res.errorCode!)]));
       }
-      final fail =
-          res.errorCode != null ||
+      final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.setStringAttribute(
-          ErrorResource.errorType.key,
-          res.errorCode ?? 'increase.error',
-        );
+        span.addAttributes(OTel.attributes([
+          OTel.attributeString(
+            ErrorResource.errorType.key,
+            res.errorCode ?? 'increase.error',
+          )
+        ]));
         span.setStatus(SpanStatusCode.Error, res.errorMessage);
       }
     }
