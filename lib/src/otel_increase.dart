@@ -1,11 +1,12 @@
-// Licensed under the Dartastic Pro Software License Agreement.
+// Licensed under the Apache License, Version 2.0
 // Copyright 2025-2026 Mindful Software LLC d/b/a Dartastic.io, All rights reserved.
 
-import 'package:dartastic_opentelemetry/dartastic_opentelemetry.dart';
+import 'package:dartastic_opentelemetry_api/dartastic_opentelemetry_api.dart';
 
 import 'otel_increase_suppression.dart';
 
 class IncreaseResult {
+  /// Creates a result.
   const IncreaseResult({
     this.groupId,
     this.entityId,
@@ -35,8 +36,13 @@ class IncreaseResult {
   final String? errorMessage;
 }
 
+/// What a traced call returned: the value for the caller plus fields
+/// recorded on the span.
 class IncreaseCallResult<T> {
+  /// Creates a call result.
   const IncreaseCallResult({required this.value, this.result});
+
+  /// The value returned to the caller.
   final T value;
   final IncreaseResult? result;
 }
@@ -44,75 +50,77 @@ class IncreaseCallResult<T> {
 Future<T> tracedIncrease<T>({
   required String operation,
   required Future<IncreaseCallResult<T>> Function() invoke,
-  Tracer? tracer,
+  APITracer? tracer,
 }) async {
   if (increaseInstrumentationSuppressed()) {
     final r = await invoke();
     return r.value;
   }
-  final t = tracer ?? OTel.tracerProvider().getTracer('otel_increase');
+  final t = tracer ?? OTelAPI.tracerProvider().getTracer('otel_increase');
   final span = t.startSpan('increase $operation', kind: SpanKind.client);
   try {
-    span.addAttributes(
-        OTel.attributes([OTel.attributeString('rpc.system', 'increase')]));
+    span.addAttributes(OTelAPI.attributes(
+        [OTelAPI.attributeString('rpc.system', 'increase')]));
     final r = await invoke();
     final res = r.result;
     if (res != null) {
       if (res.groupId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.group.id', res.groupId!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.group.id', res.groupId!)]));
       }
       if (res.entityId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.entity.id', res.entityId!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.entity.id', res.entityId!)]));
       }
       if (res.accountId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.account.id', res.accountId!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.account.id', res.accountId!)]));
       }
       if (res.accountNumberId != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString(
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString(
             'increase.account_number.id',
             res.accountNumberId!,
           )
         ]));
       }
       if (res.transferId != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.transfer.id', res.transferId!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString('increase.transfer.id', res.transferId!)
+        ]));
       }
       if (res.transferType != null) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString('increase.transfer.type', res.transferType!)
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString('increase.transfer.type', res.transferType!)
         ]));
       }
       if (res.amount != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeDouble('increase.amount', res.amount!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeDouble('increase.amount', res.amount!)]));
       }
       if (res.currency != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.currency', res.currency!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.currency', res.currency!)]));
       }
       if (res.status != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.status', res.status!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.status', res.status!)]));
       }
       if (res.statusCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeInt('http.response.status_code', res.statusCode!)]));
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeInt('http.response.status_code', res.statusCode!)
+        ]));
       }
       if (res.errorCode != null) {
-        span.addAttributes(OTel.attributes(
-            [OTel.attributeString('increase.error.code', res.errorCode!)]));
+        span.addAttributes(OTelAPI.attributes(
+            [OTelAPI.attributeString('increase.error.code', res.errorCode!)]));
       }
       final fail = res.errorCode != null ||
           (res.statusCode != null && res.statusCode! >= 400);
       if (fail) {
-        span.addAttributes(OTel.attributes([
-          OTel.attributeString(
-            ErrorResource.errorType.key,
+        span.addAttributes(OTelAPI.attributes([
+          OTelAPI.attributeString(
+            ErrorAttributes.errorType.key,
             res.errorCode ?? 'increase.error',
           )
         ]));
